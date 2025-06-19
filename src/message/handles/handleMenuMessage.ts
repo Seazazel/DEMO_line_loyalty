@@ -1,11 +1,11 @@
-import { getButtonOptionsFlexContent } from "./flexMessage";
+import { getButtonOptionsFlexContent } from "../functions/flexMessage";
 import { FlexMessage } from "@line/bot-sdk";
 import { BASE_URL } from "config/baseUrl.config";
 
 const licenseNum = ['ขง 666 เชียงราย', 'กก 6969 พะเยา', 'ลล 3335 เชียงราย']
 const servicesOptions = ['ศูนย์บริการใกล้ฉัน', 'ตรอ. ใกล้ฉัน', 'โปรโมชั่นศูนย์บริการ'];
 const regandinsureOptions = ['เช็คข้อมูลทะเบียน', 'ต่อทะเบียน', 'ต่อพรบ.', 'ซื้อ/ต่อประกัน'];
-const moreOptions = ['ช่องทางการติดต่อ', 'สมัครงาน', 'อื่นๆ'];
+const moreOptions = ['ช่องทางการติดต่อ', 'สมัครงาน','ขอรหัส wi-fi', 'อื่นๆ'];
 
 export async function handleMenuMessage(
     message: string,

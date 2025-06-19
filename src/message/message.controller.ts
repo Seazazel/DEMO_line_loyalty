@@ -19,6 +19,10 @@ export class MessageController {
   ): Promise<any> {
     const signature = req.headers['x-line-signature'] as string;
 
+    
+  //console.log('📦 Headers:', JSON.stringify(req.headers, null, 2));
+  console.log('📦 Body:', JSON.stringify(body, null, 2));
+
     if (!lineConfig.channelSecret) {
       console.error("LINE Channel Secret is not configured in line.config.ts.");
       return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send('Server configuration error');
