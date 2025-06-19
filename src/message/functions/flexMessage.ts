@@ -1,5 +1,5 @@
 import type { FlexMessage, FlexBubble, FlexButton} from '@line/bot-sdk';
-import { ServiceCenter } from '../types/message.interface';
+
 
 type ButtonOption = {
   label: string;

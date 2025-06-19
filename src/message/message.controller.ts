@@ -10,6 +10,7 @@ import * as line from '@line/bot-sdk';
 export class MessageController {
   constructor(
     private readonly messageService: MessageService) { }
+
   @Post()
   @HttpCode(200)
   async handleWebhook(
@@ -19,10 +20,18 @@ export class MessageController {
   ): Promise<any> {
     const signature = req.headers['x-line-signature'] as string;
 
-    
-  //console.log('📦 Headers:', JSON.stringify(req.headers, null, 2));
-  console.log('📦 Body:', JSON.stringify(body, null, 2));
+    // // Clone body to avoid mutating original object
+    // const bodyWithFormattedTimestamps = {
+    //   ...body,
+    //   events: body.events?.map(event => ({
+    //     ...event,
+    //     formattedTimestamp: new Date(event.timestamp).toISOString(),
+    //   })) || [],
+    // };
 
+    //console.log('📦 Body with formatted timestamps:', JSON.stringify(bodyWithFormattedTimestamps, null, 2));
+    //console.log('📦 Headers:', JSON.stringify(req.headers, null, 2));
+    console.log('📦 Body:', JSON.stringify(body, null, 2));
     if (!lineConfig.channelSecret) {
       console.error("LINE Channel Secret is not configured in line.config.ts.");
       return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send('Server configuration error');
@@ -41,9 +50,6 @@ export class MessageController {
       console.warn('Invalid LINE signature. Request potentially not from LINE.');
       return res.status(HttpStatus.FORBIDDEN).send('Invalid signature');
     }
-
-    //console.log('LINE signature verified successfully.');
-    //console.log('Received webhook event from LINE:', JSON.stringify(body, null, 2));
 
     try {
       if (body.events && body.events.length > 0) {

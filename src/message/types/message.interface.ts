@@ -4,13 +4,6 @@ export interface userSession {
     content? : string,
 }
 
-export interface ServiceCenter {
-  name: string;
-  address: string;
-  lat: number;
-  lng: number;
-}
-
 export enum ConversationStep {
   Priority = 'priority',
   Urgency = 'urgency',

@@ -1,7 +1,11 @@
 import { FlexMessage } from '@line/bot-sdk';
-import { ServiceCenter } from '../types/message.interface';
 
-
+export interface ServiceCenter {
+  name: string;
+  address: string;
+  lat: number;
+  lng: number;
+}
 
 function haversineDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
   const R = 6371; // Earth radius in km

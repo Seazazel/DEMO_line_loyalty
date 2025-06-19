@@ -1,10 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { Client, MessageEvent, TextMessage, WebhookEvent, LocationMessage } from '@line/bot-sdk';
+import { Client, MessageEvent, TextMessage, WebhookEvent, LocationMessage, PostbackEvent } from '@line/bot-sdk';
 import { lineConfig } from 'config/Line.config';
 import { replyFlex, replyText, replyImage } from './functions/replyFunction';
 import { userSession } from './types/message.interface';
-import { handleConversationStep } from './handles/handleConversationStep';
-import { handlePostbackEvent } from './handles/handlePostbackEvent';
+import { handlePostbackMessage } from './handles/handlePostbackMessage';
 import { handleMenuMessage } from './handles/handleMenuMessage';
 import { findNearbyServiceCenters, buildNearbyLocationFlex } from './functions/locationFunction';
 
@@ -29,7 +28,7 @@ export class MessageService {
                     await this.handleLocationEvent(event);
                 }
             } else if (event.type === 'postback') {
-                await handlePostbackEvent(this.client, event);
+                await this.handlePostbackEvent(this.client, event);
             }
 
             else {
@@ -48,11 +47,7 @@ export class MessageService {
         }
 
         this.userSession[userId] ||= { userID: userId };
-        const session = this.userSession[userId];
         const message = (event.message as TextMessage).text.trim();
-
-        const conversationReplied = await handleConversationStep(session, event, message);
-        if (conversationReplied) return;
 
         const menuReplied = await handleMenuMessage(
             message,
@@ -71,6 +66,27 @@ export class MessageService {
     }
 
 
+    //handle postback
+    async handlePostbackEvent(
+        client: Client,
+        event: PostbackEvent
+    ): Promise<void> {
+        const data = event.postback.data;
+        const replyToken = event.replyToken;
+
+        if (!data) {
+            await replyText(client, replyToken, 'ไม่สามารถประมวลผลข้อมูลได้');
+            return;
+        }
+
+        const params = Object.fromEntries(new URLSearchParams(data));
+        const action = params['action'];
+        const item = decodeURIComponent(params['item'] || '');
+
+        await handlePostbackMessage(client, replyToken, action, item, params);
+    }
+
+    
     //handle location event
     async handleLocationEvent(event: MessageEvent): Promise<void> {
         console.log('📍 handleLocationEvent triggered');
