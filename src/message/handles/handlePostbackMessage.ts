@@ -4,11 +4,14 @@ import { handleCheckInstallment } from './handleCheckInstallment';
 import { handleServiceCenter } from './handleServiceCenter';
 import { handleInsurance } from './handleInsurance';
 import { handleOther } from './handleOther';
-import { handleRenewLicense, 
-  handleRenewInsurance, 
-  handleRenewOrBuyInsurance, 
-  handleCheckLicenseNum, 
-  handleRenewRegistration } from './handleInsuranceSubAction';
+import {
+  handleRenewLicense,
+  handleRenewInsurance,
+  handleRenewOrBuyInsurance,
+  handleCheckLicenseNum,
+  handleRenewRegistration
+} from './handleInsuranceSubAction';
+import { HotspotService } from 'src/hotspot/hotspot.service';
 
 
 export async function handlePostbackMessage(
@@ -16,7 +19,10 @@ export async function handlePostbackMessage(
   replyToken: string,
   action: string,
   item: string,
-  params: Record<string, string>
+  params: Record<string, string>,
+  hotspotService: HotspotService,
+  userId: string,
+  destination: string
 ): Promise<void> {
   switch (action) {
     case 'checkInstallment':
@@ -32,7 +38,9 @@ export async function handlePostbackMessage(
       break;
 
     case 'other':
-      await handleOther(client, replyToken, item);
+
+      //console.log('uid des ' + userId,destination)
+      await handleOther(client, replyToken, item, params['message'] || '', userId, destination, hotspotService);
       break;
 
     case 'checkLicenseNum':
@@ -46,12 +54,12 @@ export async function handlePostbackMessage(
     case 'renewInsurance':
       await handleRenewInsurance(client, replyToken, params);
       break;
-      
+
     case 'renewOrBuyInsurance':
       await handleRenewOrBuyInsurance(client, replyToken, item, params);
       break;
 
-      case 'renewRegistration':
+    case 'renewRegistration':
       await handleRenewRegistration(client, replyToken, params);
       break;
 

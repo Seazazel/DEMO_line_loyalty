@@ -2,33 +2,39 @@ import { Injectable } from '@nestjs/common';
 import { Client, MessageEvent, TextMessage, WebhookEvent, LocationMessage, PostbackEvent } from '@line/bot-sdk';
 import { lineConfig } from 'config/Line.config';
 import { replyFlex, replyText, replyImage } from './functions/replyFunction';
-import { userSession } from './types/message.interface';
 import { handlePostbackMessage } from './handles/handlePostbackMessage';
 import { handleMenuMessage } from './handles/handleMenuMessage';
 import { findNearbyServiceCenters, buildNearbyLocationFlex } from './functions/locationFunction';
-
-
+import { HotspotService } from 'src/hotspot/hotspot.service';
 
 @Injectable()
 export class MessageService {
     private client: Client;
-    private userSession: Record<string, userSession> = {};
 
-    constructor() {
+    constructor(
+        private readonly hotspotService: HotspotService // ✅ Injected via Nest
+    ) {
         this.client = new Client(lineConfig);
     }
+    async webhookHandler(reqBody: any) {
+        const { destination, events } = reqBody;
 
-    //handle event
-    async handleEvent(event: WebhookEvent): Promise<void> {
+        for (const event of events) {
+            await this.handleEvent(event, destination);
+        }
+    }
+
+    // Update handleEvent signature to accept destination:
+    async handleEvent(event: WebhookEvent, destination: string): Promise<void> {
         try {
             if (event.type === 'message') {
                 if (event.message.type === 'text') {
-                    await this.handleMessageEvent(event);
+                    await this.handleMessageEvent(event, destination);
                 } else if (event.message.type === 'location') {
                     await this.handleLocationEvent(event);
                 }
             } else if (event.type === 'postback') {
-                await this.handlePostbackEvent(this.client, event);
+                await this.handlePostbackEvent(this.client, event, destination);
             }
 
             else {
@@ -39,14 +45,13 @@ export class MessageService {
         }
     }
 
-    async handleMessageEvent(event: MessageEvent): Promise<void> {
+    async handleMessageEvent(event: MessageEvent, destination: string): Promise<void> {
         const userId = event.source.userId;
         if (!userId) {
             console.error('User ID is missing!');
             return;
         }
 
-        this.userSession[userId] ||= { userID: userId };
         const message = (event.message as TextMessage).text.trim();
 
         const menuReplied = await handleMenuMessage(
@@ -69,12 +74,14 @@ export class MessageService {
     //handle postback
     async handlePostbackEvent(
         client: Client,
-        event: PostbackEvent
+        event: PostbackEvent,
+  destination: string 
     ): Promise<void> {
         const data = event.postback.data;
         const replyToken = event.replyToken;
+        const userId = event.source.userId;
 
-        if (!data) {
+        if (!data|| !userId) {
             await replyText(client, replyToken, 'ไม่สามารถประมวลผลข้อมูลได้');
             return;
         }
@@ -83,10 +90,10 @@ export class MessageService {
         const action = params['action'];
         const item = decodeURIComponent(params['item'] || '');
 
-        await handlePostbackMessage(client, replyToken, action, item, params);
+          await handlePostbackMessage(client, replyToken, action, item, params, this.hotspotService, userId, destination );
     }
 
-    
+
     //handle location event
     async handleLocationEvent(event: MessageEvent): Promise<void> {
         console.log('📍 handleLocationEvent triggered');

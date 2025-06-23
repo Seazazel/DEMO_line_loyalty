@@ -1,10 +1,16 @@
 import { Client } from '@line/bot-sdk';
 import { replyText } from '../functions/replyFunction';
+import { HotspotService } from 'src/hotspot/hotspot.service';
+
 
 export async function handleOther(
   client: Client,
   replyToken: string,
-  item: string
+  item: string,
+  message: string,
+  userId: string,
+  destination: string,
+  hotspotService: HotspotService 
 ): Promise<void> {
   switch (item) {
     case 'ช่องทางการติดต่อ': {
@@ -17,7 +23,10 @@ export async function handleOther(
       return;
     }
 
-    case 'ขอรหัส wi-fi':
+    case 'ขอรหัส wi-fi':{
+        await hotspotService.handleWifiRequest(userId, destination);
+        return;
+    }
     case 'อื่นๆ': {
       await client.replyMessage(replyToken, {
         type: 'text',

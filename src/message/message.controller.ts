@@ -54,7 +54,7 @@ export class MessageController {
     try {
       if (body.events && body.events.length > 0) {
         for (const event of body.events) {
-          await this.messageService.handleEvent(event);
+          await this.messageService.handleEvent(event, body.destination);
         }
       }
       return res.status(HttpStatus.OK).send('OK');
