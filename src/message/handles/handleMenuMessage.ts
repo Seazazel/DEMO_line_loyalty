@@ -30,7 +30,7 @@ export async function handleMenuMessage(
         }
 
         case 'ข้อมูลผลิตภัณฑ์': {
-            await replyText(replyToken, 'คุณสามารถดูข้อมูลผลิตภัณฑ์ได้ที่นี่:\nhttps://fir-webloyalty.web.app/');
+            await replyText(replyToken, 'https://three-section-layout-38aj.vercel.app/');
             return true;
         }
 
