@@ -6,6 +6,10 @@ import { handlePostbackMessage } from './handles/handlePostbackMessage';
 import { handleMenuMessage } from './handles/handleMenuMessage';
 import { findNearbyServiceCenters, buildNearbyLocationFlex } from './functions/locationFunction';
 import { HotspotService } from 'src/hotspot/hotspot.service';
+import { handlePostbackPayload } from 'src/hotspot/handlers/handlePostbackPayload';
+import { handleAdminBranchInput } from 'src/hotspot/handlers/handleAdminAccess';
+import { handleUserBranchInput } from 'src/hotspot/handlers/handleUserAccess';
+
 
 @Injectable()
 export class MessageService {
@@ -46,52 +50,68 @@ export class MessageService {
     }
 
     async handleMessageEvent(event: MessageEvent, destination: string): Promise<void> {
-        const userId = event.source.userId;
-        if (!userId) {
-            console.error('User ID is missing!');
-            return;
-        }
+  const userId = event.source.userId;
+  if (!userId) {
+    console.error('User ID is missing!');
+    return;
+  }
 
-        const message = (event.message as TextMessage).text.trim();
+  const message = (event.message as TextMessage).text.trim();
 
-        const menuReplied = await handleMenuMessage(
-            message,
-            event.replyToken,
-            (token, flex) => replyFlex(this.client, token, flex),
-            (token, text) => replyText(this.client, token, text),
-            (token, image) => replyImage(this.client, token, image)
-        );
-        if (menuReplied) return;
+  // Try admin branch input handler first
+  const handledAdmin = await handleAdminBranchInput( this.client, event.replyToken, userId, destination, message, this.hotspotService['httpService'],);
+  if (handledAdmin) return;
 
-        // Only reply if both did not reply
-        await this.client.replyMessage(event.replyToken, {
-            type: 'text',
-            text: 'กรุณาเลือกคำสั่งในริชเมนู',
-        });
-    }
+  const handledUser = await handleUserBranchInput(
+  this.hotspotService['httpService'],
+  this.client,
+  event.replyToken,
+  userId,
+  destination,
+  message,);
+
+  if (handledUser) return;
+
+  // fallback to menu message handler
+  const menuReplied = await handleMenuMessage(
+    message,
+    event.replyToken,
+    (token, flex) => replyFlex(this.client, token, flex),
+    (token, text) => replyText(this.client, token, text),
+    (token, image) => replyImage(this.client, token, image),
+  );
+  if (menuReplied) return;
+
+  await this.client.replyMessage(event.replyToken, {
+    type: 'text',
+    text: 'กรุณาเลือกคำสั่งในริชเมนู',
+  });
+}
 
 
     //handle postback
-    async handlePostbackEvent(
-        client: Client,
-        event: PostbackEvent,
-  destination: string 
-    ): Promise<void> {
+
+    async handlePostbackEvent(client: Client, event: PostbackEvent, destination: string): Promise<void> {
         const data = event.postback.data;
         const replyToken = event.replyToken;
         const userId = event.source.userId;
 
-        if (!data|| !userId) {
+        if (!data || !userId) {
             await replyText(client, replyToken, 'ไม่สามารถประมวลผลข้อมูลได้');
             return;
         }
 
+        // for hotspot pay load
         const params = Object.fromEntries(new URLSearchParams(data));
         const action = params['action'];
         const item = decodeURIComponent(params['item'] || '');
 
-          await handlePostbackMessage(client, replyToken, action, item, params, this.hotspotService, userId, destination );
+        const stepPayload = await handlePostbackPayload(client, replyToken, userId, action, params);
+        if (stepPayload) return;
+
+        await handlePostbackMessage(client, replyToken, action, item, params, this.hotspotService, userId, destination);
     }
+
 
 
     //handle location event

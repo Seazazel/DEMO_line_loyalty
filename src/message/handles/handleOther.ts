@@ -24,7 +24,7 @@ export async function handleOther(
     }
 
     case 'ขอรหัส wi-fi':{
-        await hotspotService.handleWifiRequest(userId, destination);
+        await hotspotService.handleWifiRequest(userId, destination, client, replyToken);
         return;
     }
     case 'อื่นๆ': {

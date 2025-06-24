@@ -4,13 +4,8 @@ import { handleCheckInstallment } from './handleCheckInstallment';
 import { handleServiceCenter } from './handleServiceCenter';
 import { handleInsurance } from './handleInsurance';
 import { handleOther } from './handleOther';
-import {
-  handleRenewLicense,
-  handleRenewInsurance,
-  handleRenewOrBuyInsurance,
-  handleCheckLicenseNum,
-  handleRenewRegistration
-} from './handleInsuranceSubAction';
+import { handleRenewLicense, handleRenewInsurance, handleRenewOrBuyInsurance, handleCheckLicenseNum, handleRenewRegistration} from './handleInsuranceSubAction';
+import { usageLog, resetWifi } from 'src/hotspot/handlers/handleAdminAccess';
 import { HotspotService } from 'src/hotspot/hotspot.service';
 
 
@@ -24,6 +19,9 @@ export async function handlePostbackMessage(
   userId: string,
   destination: string
 ): Promise<void> {
+
+  const branchId = params['branchId'] || '';
+
   switch (action) {
     case 'checkInstallment':
       await handleCheckInstallment(client, replyToken, params);
@@ -38,7 +36,6 @@ export async function handlePostbackMessage(
       break;
 
     case 'other':
-
       //console.log('uid des ' + userId,destination)
       await handleOther(client, replyToken, item, params['message'] || '', userId, destination, hotspotService);
       break;
@@ -63,7 +60,15 @@ export async function handlePostbackMessage(
       await handleRenewRegistration(client, replyToken, params);
       break;
 
+    // HotSpot
+    case 'usageLog':
+      await usageLog(client, replyToken, hotspotService['httpService'], hotspotService['hotspotURL'], userId, destination, branchId);
+      break;
 
+    case 'resetWifi':
+      await resetWifi(client, replyToken, hotspotService['httpService'], hotspotService['hotspotURL'], userId, destination, branchId);
+      break;
+      
     default:
       await replyText(client, replyToken, 'คำสั่งไม่ถูกต้อง');
       break;
