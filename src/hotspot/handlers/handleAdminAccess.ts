@@ -1,10 +1,10 @@
 import { Client } from '@line/bot-sdk';
 import { Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
-import { firstValueFrom } from 'rxjs';
 import { hotspotAPIConfig } from 'config/hotspotAPI.config';
 import { getAdminSession, clearAdminSession } from 'src/hotspot/session/userSession.store';
 import { getButtonOptionsFlexContent } from 'src/message/functions/flexMessage';
+import { resetWifi, usageLog } from '../functions/hotspot.api';
 
 interface AdminPayload {
     userId: string;
@@ -52,76 +52,4 @@ export async function handleAdminBranchInput(client: Client, replyToken: string,
     return true; // Handled
 }
 
-
-export async function usageLog(
-    client: Client, replyToken: string, httpService: HttpService, hotspotURL: string, userId: string, destination: string, branchId: string)
-    : Promise<void> {
-
-    try {
-        const response = await firstValueFrom(
-            httpService.post(`${hotspotURL}/viewLog`, {
-                user: {
-                    userId,
-                    destination,
-                    branchId
-                },
-                content: {
-                    request: 'usageLog'
-                },
-            })
-        );
-
-
-        const logs: string[] = response.data?.logs || [];
-
-        const messageText = logs.length
-            ? `📊 ประวัติการใช้งาน:\n- ` + logs.join('\n- ')
-            : 'ไม่พบประวัติการใช้งาน';
-
-        await client.replyMessage(replyToken, {
-            type: 'text',
-            text: messageText,
-        });
-    } catch (error) {
-        console.error('❌ viewUsageLog error:', error.message);
-        await client.replyMessage(replyToken, {
-            type: 'text',
-            text: 'ไม่สามารถดึงข้อมูลประวัติการใช้งานได้ในขณะนี้',
-        });
-    }
-}
-
-
-export async function resetWifi(
-    client: Client, replyToken: string, httpService: HttpService, hotspotURL: string, userId: string, destination: string, branchId: string)
-    : Promise<void> {
-
-    try {
-        const response = await firstValueFrom(
-            httpService.post(`${hotspotURL}/resetWifi`, {
-                user: {
-                    userId,
-                    destination,
-                    branchId
-                },
-                content: {
-                    request: 'resetWifi'
-                },
-            })
-        );
-
-        const messageText = response.data?.Text || 'รีเซ็ตรหัสผ่านเรียบร้อยแล้ว';
-
-        await client.replyMessage(replyToken, {
-            type: 'text',
-            text: messageText,
-        });
-    } catch (error: any) {
-        console.error('❌ resetWifi error:', error.message || error);
-        await client.replyMessage(replyToken, {
-            type: 'text',
-            text: 'ไม่สามารถรีเซ็ตรหัสผ่านได้ในขณะนี้',
-        });
-    }
-}
 

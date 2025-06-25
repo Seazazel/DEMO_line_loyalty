@@ -5,7 +5,6 @@ import { handleServiceCenter } from './handleServiceCenter';
 import { handleInsurance } from './handleInsurance';
 import { handleOther } from './handleOther';
 import { handleRenewLicense, handleRenewInsurance, handleRenewOrBuyInsurance, handleCheckLicenseNum, handleRenewRegistration} from './handleInsuranceSubAction';
-import { usageLog, resetWifi } from 'src/hotspot/handlers/handleAdminAccess';
 import { HotspotService } from 'src/hotspot/hotspot.service';
 
 
@@ -61,13 +60,6 @@ export async function handlePostbackMessage(
       break;
 
     // HotSpot
-    case 'usageLog':
-      await usageLog(client, replyToken, hotspotService['httpService'], hotspotService['hotspotURL'], userId, destination, branchId);
-      break;
-
-    case 'resetWifi':
-      await resetWifi(client, replyToken, hotspotService['httpService'], hotspotService['hotspotURL'], userId, destination, branchId);
-      break;
       
     default:
       await replyText(client, replyToken, 'คำสั่งไม่ถูกต้อง');

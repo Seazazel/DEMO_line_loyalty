@@ -1,25 +1,16 @@
 import { Client } from '@line/bot-sdk';
 import { HttpService } from '@nestjs/axios';
-import { firstValueFrom } from 'rxjs';
 import { replyText } from 'src/message/functions/replyFunction';
-import {
-  getUserPassCache,
-  setUserPassCache,
-  getUserSession,
-  setUserSession,
-  clearUserSession,
-} from 'src/hotspot/session/userSession.store';
-import { hotspotAPIConfig } from 'config/hotspotAPI.config';
+import { getUserPassCache, setUserPassCache, getUserSession, setUserSession, clearUserSession, } from 'src/hotspot/session/userSession.store';
+import { getWiFi, spamGetWiFi } from 'src/hotspot/functions/hotspot.api';
 
-const CACHE_EXPIRY_MS = 2 * 60 * 1000; // 1 hour
+
+const CACHE_EXPIRY_MS = 30 * 60 * 1000; // 30 min
+//const CACHE_EXPIRY_MS = 60 * 60 * 1000; // 1 hour
 
 // === MAIN ENTRY FUNCTION ===
-export async function handleUserAccess(
-  client: Client,
-  replyToken: string,
-  userId: string,
-  destination: string,
-): Promise<void> {
+export async function handleUserAccess(client: Client, replyToken: string, userId: string, destination: string,): Promise<void> {
+
   // Store session awaiting branch input
   setUserSession(userId, {
     action: 'requestWifi',
@@ -33,62 +24,6 @@ export async function handleUserAccess(
 function isCacheValid(cached: { cachedAt: Date } | null | undefined): boolean {
   return !!cached && new Date().getTime() - cached.cachedAt.getTime() <= CACHE_EXPIRY_MS;
 }
-
-async function fetchUserCredentials(
-  httpService: HttpService,
-  userId: string,
-  profileId: string,
-  destination: string,
-  branchId: string,
-): Promise<{ username?: string; password?: string }> {
-  const formattedDate = new Date().toISOString();
-  const hotspotURL = hotspotAPIConfig.hotspotURL;
-
-  const response = await firstValueFrom(
-    httpService.post(`${hotspotURL}/userRequestUserPass`, {
-      user: { 
-        userId, 
-        profileId, 
-        destination, 
-        branchId 
-      },
-      content: { 
-        formattedDate 
-      },
-    }),
-  );
-
-  return response.data || {};
-}
-
-async function checkSpamUsageLog(
-  httpService: HttpService,
-  userId: string,
-  profileId: string,
-  destination: string,
-  branchId: string,
-): Promise<boolean> {
-  const formattedDate = new Date().toISOString();
-  const hotspotURL = hotspotAPIConfig.hotspotURL;
-
-  console.error("SPAMMED")
-  const response = await firstValueFrom(
-    httpService.post(`${hotspotURL}/spamUsageLog`, {
-      user: { 
-        userId, 
-        profileId, 
-        destination, 
-        branchId 
-      },
-      content: { 
-        formattedDate 
-      },
-    }),
-  );
-
-  return response.data?.Text === 'Not Exceed Hour';
-}
-
 
 // === CALLED AFTER USER TYPED BRANCH ===
 export async function handleUserBranchInput(
@@ -108,50 +43,42 @@ export async function handleUserBranchInput(
     const cacheKey = `${userId}:${branchId}`;
     const cached = getUserPassCache(cacheKey);
 
+    // request Exceed 1 hr
     if (!isCacheValid(cached)) {
       try {
-        const { username, password } = await fetchUserCredentials(
-          httpService,
-          userId,
-          profileId,
-          destination,
-          branchId,
-        );
+        const { username, password } = await getWiFi(httpService, userId, profileId, destination, branchId,);
 
         if (username && password) {
           setUserPassCache(cacheKey, { username, password, cachedAt: new Date() });
           await replyText(client, replyToken, `Username: ${username}\nPassword: ${password}`);
         } else {
-          await replyText(client, replyToken, 'ไม่พบข้อมูลบัญชีผู้ใช้ในขณะนี้');
+          await replyText(client, replyToken, 'ไม่พบ Username และ Password');
         }
       } catch (err: any) {
-        console.error('fetchUserCredentials error:', err.message);
-        await replyText(client, replyToken, 'ไม่สามารถดึงข้อมูลบัญชีผู้ใช้ได้ในขณะนี้ 😢');
+        console.error('getWiFi branch error:', err.message);
+        await replyText(client, replyToken, 'สาขาไม่ถูกต้อง กรุณากดขอใหม่อีกครั้ง');
       }
-    } else {
+    }
+
+    // request Not Exceed 1 hr
+    else {
       try {
-  const allowed = await checkSpamUsageLog(
-    httpService,
-    userId,
-    profileId,
-    destination,
-    branchId,
-  );
+        const allowed = await spamGetWiFi(httpService, userId, profileId, destination, branchId,);
 
-  if (allowed && cached) {
-    await replyText(
-      client,
-      replyToken,
-      `Username (cached): ${cached.username}\nPassword (cached): ${cached.password}`,
-    );
-  } else {
-    await replyText(client, replyToken, 'เกิดข้อผิดพลาดขณะตรวจสอบข้อมูล โปรดลองใหม่');
-  }
+        if (allowed && cached) {
+          await replyText(
+            client,
+            replyToken,
+            `Username (cached): ${cached.username}\nPassword (cached): ${cached.password}`,
+          );
+        } else {
+          await replyText(client, replyToken, 'ไม่สามารถ');
+        }
 
-} catch (err: any) {
-  console.error('checkSpamUsageLog error:', err.message);
-  await replyText(client, replyToken, 'ไม่สามารถตรวจสอบข้อมูลได้ในขณะนี้ 😢');
-}
+      } catch (err: any) {
+        console.error('spamGetWiFi error:', err.message);
+        await replyText(client, replyToken, 'ไม่สามารถตรวจสอบข้อมูลได้ในขณะนี้ 😢');
+      }
     }
 
     return true;

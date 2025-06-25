@@ -46,10 +46,12 @@ export class HotspotService {
 
       try {
         const response = await firstValueFrom(
-          this.httpService.post(`${this.hotspotURL}/check-admin`, { // post to check admin
-            userId,
-            destination,
-            isAdmin: null
+          this.httpService.post(`${this.hotspotURL}/hotspot/check-admin`,  {
+            user: { 
+              userId,
+              destination, 
+              isAdmin : null,
+            },
           })
         );
 
