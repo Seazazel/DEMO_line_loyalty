@@ -1,6 +1,7 @@
 import { Client } from '@line/bot-sdk';
-import { replyText } from '../functions/replyFunction';
+import { replyText} from '../functions/replyFunction';
 import { HotspotService } from 'src/hotspot/hotspot.service';
+import { BASE_URL } from 'config/baseUrl.config';
 
 
 export async function handleOther(
@@ -27,10 +28,27 @@ export async function handleOther(
         await hotspotService.handleWifiRequest(userId, destination, client, replyToken);
         return;
     }
+    
+case 'บริจาคเงินช่วยเหลือเด็กๆ': {
+  await client.replyMessage(replyToken, [
+    {
+      type: 'image',
+      originalContentUrl: `${BASE_URL}/assets/images/donate2.png`,
+      previewImageUrl: `${BASE_URL}/assets/images/donate2.png`,
+    },
+    {
+      type: 'image',
+      originalContentUrl: `${BASE_URL}/assets/images/donate1.png`,
+      previewImageUrl: `${BASE_URL}/assets/images/donate1.png`,
+    },
+  ]);
+  return;
+}
+
     case 'อื่นๆ': {
       await client.replyMessage(replyToken, {
         type: 'text',
-        text: `คุณเลือกบริการ: ${item}`,
+        text: `ท่านสามารถขอรับบริการเพิ่มเติมจากเจ้าหน้าที่ผ่านเบอร์ติดต่อ xxx-xxxxxxxx`, 
       });
       return;
     }

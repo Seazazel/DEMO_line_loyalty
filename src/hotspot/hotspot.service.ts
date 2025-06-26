@@ -3,16 +3,10 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Client } from '@line/bot-sdk';
 import { firstValueFrom } from 'rxjs';
 import * as dotenv from 'dotenv';
-import { handleAdminAccess, handleAdminBranchInput } from './handlers/handleAdminAccess';
+import { handleAdminAccess } from './handlers/handleAdminAccess';
 import { handleUserAccess } from './handlers/handleUserAccess';
 
 dotenv.config();
-
-interface AdminPayload {
-  userId: string;
-  destination: string;
-  isAdmin: boolean | null;
-}
 
 
 @Injectable()
@@ -60,21 +54,21 @@ export class HotspotService {
         if (typeof isAdminResponse === 'boolean') {
           isAdmin = isAdminResponse;
         } else {
-          this.logger.warn(`❌ isAdmin missing or invalid in response for ${cacheKey}`);
+          this.logger.warn(`isAdmin missing or invalid in response for ${cacheKey}`);
           isAdmin = null;
         }
 
         //set cache until this server stop running
         this.isAdminCache.set(cacheKey, isAdmin);
       } catch (error: any) {
-        this.logger.error(`Failed admin check for ${cacheKey}: ${error.message}`);
+        //
+        console.error(`Server is down ${cacheKey}: ${error.message}`);
+
         throw error;
       }
     } else {
       this.logger.log(`Using cached isAdmin=${isAdmin} for ${cacheKey}`);
     }
-
-    const AdminPayload: AdminPayload = { userId, destination, isAdmin };
 
 
     //deciding what to do
@@ -82,7 +76,7 @@ export class HotspotService {
       console.log("แอดมินเข้ามา");
       this.logCache();
 
-      await handleAdminAccess(client, replyToken, AdminPayload, this.logger);
+      await handleAdminAccess(client, replyToken);
 
     } else {
       console.log("ไม่ใช่แอดมิน");

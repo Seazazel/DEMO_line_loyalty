@@ -46,7 +46,7 @@ const bodyWithFormattedTimestamps = {
   }) || [],
 };
 
-    //console.log('📦 Body with formatted timestamps:', JSON.stringify(bodyWithFormattedTimestamps, null, 2));
+    console.log('📦 Body with formatted timestamps:', JSON.stringify(bodyWithFormattedTimestamps, null, 2));
     //console.log('📦 Body:', JSON.stringify(body, null, 2));
     //console.log('📦 Headers:', JSON.stringify(req.headers, null, 2));
     if (!lineConfig.channelSecret) {

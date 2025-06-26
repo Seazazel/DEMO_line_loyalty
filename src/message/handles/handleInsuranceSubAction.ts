@@ -2,6 +2,7 @@ import { Client } from '@line/bot-sdk';
 import { replyText, replyImage, replyFlex } from '../functions/replyFunction';
 import { getLicensePlateList } from '../functions/getLicensePlateList';
 import { getButtonOptionsFlexContent } from '../functions/flexMessage';
+import { BASE_URL } from 'config/baseUrl.config';
 
 
 
@@ -11,8 +12,25 @@ export async function handleCheckLicenseNum(
   params: Record<string, string>
 ): Promise<void> {
   const plate = decodeURIComponent(params['plate'] || 'ไม่ทราบทะเบียน');
-  const responseText = `ข้อมูลของทะเบียน ${plate} คือ: รถยนต์นั่งส่วนบุคคลไม่เกิน 7 คน ✅`;
-
+  const responseText = `ข้อมูลของทะเบียน ${plate}\n\nพรบ.ของท่านจะหมดอายุในวันที่ 24 มกราคม พ.ศ.2566 `;
+  
+    await client.replyMessage(replyToken, [
+    {
+      type: 'text',
+      text: responseText,
+    },
+    {
+      type: 'image',
+      originalContentUrl: `${BASE_URL}/assets/images/PRB2.jpg`,
+      previewImageUrl: `${BASE_URL}/assets/images/PRB2.jpg`,
+    },
+    {
+      type: 'image',
+      originalContentUrl: `${BASE_URL}/assets/images/PRB.jpg`,
+      previewImageUrl: `${BASE_URL}/assets/images/PRB.jpg`,
+    },
+  ]);
+  
   await replyText(client, replyToken, responseText);
 }
 
@@ -26,7 +44,7 @@ export async function handleRenewLicense(
   const plate = decodeURIComponent(params['plate'] || 'ไม่ทราบทะเบียน');
   await client.replyMessage(replyToken, {
     type: 'text',
-    text: `ส่งคำขอต่อทะเบียน ${plate} เรียบร้อยแล้ว`,
+    text: `ส่งคำขอต่อทะเบียน ${plate} เรียบร้อยแล้ว\n\nเจ้าหน้าที่จะติดต่อท่านให้เร็วที่สุด ✅`,
   });
 }
 
@@ -39,7 +57,7 @@ export async function handleRenewRegistration(
   const plate = decodeURIComponent(params['plate'] || 'ไม่ทราบทะเบียน');
   await client.replyMessage(replyToken, {
     type: 'text',
-    text: `ส่งคำขอต่อพรบ.ของทะเบียน ${plate} เรียบร้อยแล้ว`,
+    text: `ส่งคำขอต่อพรบ.ของทะเบียน ${plate} เรียบร้อยแล้ว\n\nเจ้าหน้าที่จะติดต่อท่านให้เร็วที่สุด ✅`,
   });
 }
 
@@ -77,7 +95,7 @@ export async function handleRenewOrBuyInsurance(
   // ✅ Step 2: Plate is provided → confirm submission
   await client.replyMessage(replyToken, {
     type: 'text',
-    text: `ส่งคำขอต่อประกันของทะเบียน ${plate} เรียบร้อยแล้ว ✅`,
+    text: `ส่งคำขอต่อประกันของทะเบียน ${plate} เรียบร้อยแล้ว\n\nเจ้าหน้าที่จะติดต่อท่านให้เร็วที่สุด ✅`,
   });
   return;
     }
@@ -98,6 +116,6 @@ export async function handleRenewInsurance(
   const plate = decodeURIComponent(params['plate'] || 'ไม่ทราบทะเบียน');
   await client.replyMessage(replyToken, {
     type: 'text',
-    text: `ส่งคำขอต่อประกันของทะเบียน ${plate} เรียบร้อยแล้ว`,
+    text: `ส่งคำขอต่อประกันของทะเบียน ${plate} เรียบร้อยแล้ว\n\nเจ้าหน้าที่จะติดต่อท่านให้เร็วที่สุด ✅`,
   });
 }

@@ -5,17 +5,16 @@ import { getUserPassCache, setUserPassCache, getUserSession, setUserSession, cle
 import { getWiFi, spamGetWiFi } from 'src/hotspot/functions/hotspot.api';
 
 
-const CACHE_EXPIRY_MS = 30 * 60 * 1000; // 30 min
-//const CACHE_EXPIRY_MS = 60 * 60 * 1000; // 1 hour
+//const CACHE_EXPIRY_MS = 5 * 60 * 1000; // 5 min for test
+const CACHE_EXPIRY_MS = 60 * 60 * 1000; // 1 hour
 
-// === MAIN ENTRY FUNCTION ===
+// ENTRY FUNCTION
 export async function handleUserAccess(client: Client, replyToken: string, userId: string, destination: string,): Promise<void> {
 
   // Store session awaiting branch input
   setUserSession(userId, {
     action: 'requestWifi',
-    step: 'awaitingBranchId',
-    profileId: '1', // can modify if dynamic later
+    step: 'awaitingBranchId'
   });
 
   await replyText(client, replyToken, 'โปรดกรอกรหัสสาขาที่ต้องการ');
@@ -25,7 +24,7 @@ function isCacheValid(cached: { cachedAt: Date } | null | undefined): boolean {
   return !!cached && new Date().getTime() - cached.cachedAt.getTime() <= CACHE_EXPIRY_MS;
 }
 
-// === CALLED AFTER USER TYPED BRANCH ===
+// CALLED AFTER USER TYPED BRANCH 
 export async function handleUserBranchInput(
   httpService: HttpService,
   client: Client,
@@ -38,7 +37,6 @@ export async function handleUserBranchInput(
 
   if (session?.step === 'awaitingBranchId' && session.action === 'requestWifi') {
     clearUserSession(userId);
-    const profileId = session.profileId || '1';
     const branchId = message.trim();
     const cacheKey = `${userId}:${branchId}`;
     const cached = getUserPassCache(cacheKey);
@@ -46,11 +44,11 @@ export async function handleUserBranchInput(
     // request Exceed 1 hr
     if (!isCacheValid(cached)) {
       try {
-        const { username, password } = await getWiFi(httpService, userId, profileId, destination, branchId,);
+        const { username, password, Time } = await getWiFi(client, httpService, userId, destination, branchId);
 
         if (username && password) {
           setUserPassCache(cacheKey, { username, password, cachedAt: new Date() });
-          await replyText(client, replyToken, `Username: ${username}\nPassword: ${password}`);
+          await replyText(client, replyToken, `Username: ${username}\nPassword: ${password}\nระยะเวลาจำกัดที่ใช้ได้: ${Time} ชั่วโมงหลังจากการขอครั้งแรก`);
         } else {
           await replyText(client, replyToken, 'ไม่พบ Username และ Password');
         }
@@ -63,13 +61,13 @@ export async function handleUserBranchInput(
     // request Not Exceed 1 hr
     else {
       try {
-        const allowed = await spamGetWiFi(httpService, userId, profileId, destination, branchId,);
+        const allowed = await spamGetWiFi(client, httpService, userId, destination, branchId);
 
         if (allowed && cached) {
           await replyText(
             client,
             replyToken,
-            `Username (cached): ${cached.username}\nPassword (cached): ${cached.password}`,
+            `Username (cached): ${cached.username}\nPassword (cached): ${cached.password}\nระยะเวลาจำกัดที่ใช้ได้: ชั่วโมงหลังจากการขอครั้งแรก`,
           );
         } else {
           await replyText(client, replyToken, 'ไม่สามารถ');

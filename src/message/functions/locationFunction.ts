@@ -31,7 +31,7 @@ export async function findNearbyServiceCenters(userLat: number, userLng: number)
       ...center,
       distance: haversineDistance(userLat, userLng, center.lat, center.lng),
     }))
-    .filter(center => center.distance <= 10) // ✅ only within 10 km
+    .filter(center => center.distance <= 1000) // ✅ only within 10 km
     .sort((a, b) => a.distance - b.distance)
     .slice(0, 3); // return top 3 nearby (optional)
 }

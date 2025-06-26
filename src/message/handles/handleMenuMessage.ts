@@ -6,7 +6,7 @@ import { getLicensePlateList } from "../functions/getLicensePlateList";
 
 const servicesOptions = ['ศูนย์บริการใกล้ฉัน', 'ตรอ. ใกล้ฉัน', 'โปรโมชั่นศูนย์บริการ'];
 const regandinsureOptions = ['เช็คข้อมูลทะเบียน', 'ต่อทะเบียน', 'ต่อพรบ.', 'ซื้อ/ต่อประกัน'];
-const moreOptions = ['ช่องทางการติดต่อ', 'สมัครงาน','ขอรหัส wi-fi', 'อื่นๆ'];
+const moreOptions = ['ช่องทางการติดต่อ', 'สมัครงาน','ขอรหัส wi-fi','บริจาคเงินช่วยเหลือเด็กๆ', 'อื่นๆ'];
 
 export async function handleMenuMessage(
     message: string,

@@ -7,14 +7,28 @@ export async function handleCheckInstallment(
   params: Record<string, string>
 ) {
   const plate = params['plate'] || 'ไม่ทราบทะเบียน';
-  const mockResponse = `ข้อมูลค่างวดของทะเบียน ${decodeURIComponent(plate)} คือ 5,400 บาท ค้าง 0 งวด ✅`;
+  const mockResponse = `ข้อมูลค่างวดของทะเบียน ${decodeURIComponent(plate)} คือ 5,400 บาท ค้าง 3 งวด ✅`;
 
   await client.replyMessage(replyToken, [
-    { type: 'text', text: mockResponse },
-    {
-      type: 'image',
-      originalContentUrl: `${BASE_URL}/assets/images/installment.png`,
-      previewImageUrl: `${BASE_URL}/assets/images/installment.png`,
-    },
-  ]);
+  {
+    type: 'text',
+    text: mockResponse,
+  },
+  {
+    type: 'image',
+    originalContentUrl: `${BASE_URL}/assets/images/installment1.png`,
+    previewImageUrl: `${BASE_URL}/assets/images/installment1.png`,
+  },
+  {
+    type: 'image',
+    originalContentUrl: `${BASE_URL}/assets/images/installment2.png`,
+    previewImageUrl: `${BASE_URL}/assets/images/installment2.png`,
+  },
+  {
+    type: 'image',
+    originalContentUrl: `${BASE_URL}/assets/images/installment3.png`,
+    previewImageUrl: `${BASE_URL}/assets/images/installment3.png`,
+  },
+]);
+
 }

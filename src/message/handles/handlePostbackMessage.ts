@@ -19,7 +19,6 @@ export async function handlePostbackMessage(
   destination: string
 ): Promise<void> {
 
-  const branchId = params['branchId'] || '';
 
   switch (action) {
     case 'checkInstallment':
@@ -59,8 +58,6 @@ export async function handlePostbackMessage(
       await handleRenewRegistration(client, replyToken, params);
       break;
 
-    // HotSpot
-      
     default:
       await replyText(client, replyToken, 'คำสั่งไม่ถูกต้อง');
       break;

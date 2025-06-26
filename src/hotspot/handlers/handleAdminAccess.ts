@@ -1,55 +1,79 @@
 import { Client } from '@line/bot-sdk';
-import { Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { hotspotAPIConfig } from 'config/hotspotAPI.config';
-import { getAdminSession, clearAdminSession } from 'src/hotspot/session/userSession.store';
+import { getAdminSession, clearAdminSession, setAdminSession } from 'src/hotspot/session/userSession.store';
+import { resetWifi, getUsageLog } from 'src/hotspot/functions/hotspot.api';
+import { replyText } from 'src/message/functions/replyFunction';
 import { getButtonOptionsFlexContent } from 'src/message/functions/flexMessage';
-import { resetWifi, usageLog } from '../functions/hotspot.api';
 
-interface AdminPayload {
-    userId: string;
-    destination: string;
-    isAdmin: boolean | null;
+// ENTRY FUNCTION
+export async function handleAdminAccess(
+  client: Client,
+  replyToken: string
+) {
+  const flex = getButtonOptionsFlexContent(
+    'Admin Wi-Fi Access',
+    [
+      {
+        label: 'ดูประวัติการใช้งาน',
+        postbackData: 'action=usageLog',
+      },
+      {
+        label: 'รีเซ็ตรหัส Wi-Fi',
+        postbackData: 'action=resetWifi',
+      },
+    ]
+  );
+
+  await client.replyMessage(replyToken, flex);
 }
 
-// Step 1: Send admin options
-export async function handleAdminAccess(client: Client, replyToken: string, payload: AdminPayload, logger: Logger) {
+// handle postback option
+export async function handleAdminOption(
+  client: Client,
+  replyToken: string,
+  userId: string,
+  action: 'usageLog' | 'resetWifi'
+): Promise<void> {
+  setAdminSession(userId, {
+    action,
+    step: 'awaitingBranchId',
+  });
 
-    logger.log('📡 Admin access granted, sending options...');
+  const prompt =
+    action === 'usageLog'
+      ? '📊 โปรดกรอกรหัสสาขาที่ต้องการดูประวัติ\n\n- พิมพ์รหัสสาขา หรือ\n- พิมพ์ all เพื่อดูทุกสาขา'
+      : '🔐 โปรดกรอกรหัสสาขาที่ต้องการรีเซ็ต Wi-Fi\n\n- พิมพ์รหัสสาขา หรือ\n- พิมพ์ all เพื่อรีเซ็ตทุกสาขา';
 
-    const flex = getButtonOptionsFlexContent(
-        'Admin Wi-Fi Acccess',
-        [
-            {
-                label: 'ดูประวัติการใช้งาน',
-                postbackData: 'action=usageLog',
-            },
-            {
-                label: 'รีเซ็ตรหัส Wi-Fi',
-                postbackData: 'action=resetWifi',
-            },
-        ]
-    );
-
-    await client.replyMessage(replyToken, flex);
+  await replyText(client, replyToken, prompt);
 }
 
-export async function handleAdminBranchInput(client: Client, replyToken: string, userId: string, destination: string, message: string, httpService: HttpService,) {
-    const session = getAdminSession(userId);
-    if (!session || session.step !== 'awaitingBranchId') {
-        return false; // Not handled here
-    }
+export async function handleAdminBranchInput(
+  httpService: HttpService,
+  client: Client,
+  replyToken: string,
+  userId: string,
+  destination: string,
+  message: string
+): Promise<boolean> {
+  const session = getAdminSession(userId);
+  if (!session || session.step !== 'awaitingBranchId') return false;
 
-    clearAdminSession(userId);
-    const branchId = message.trim();
+  clearAdminSession(userId);
 
+  const branchId = message.trim();
+  const url = hotspotAPIConfig.hotspotURL;
+
+  try {
     if (session.action === 'usageLog') {
-        await usageLog(client, replyToken, httpService, hotspotAPIConfig.hotspotURL, userId, destination, branchId);
+      await getUsageLog(client, replyToken, httpService, url, userId, destination, branchId);
     } else if (session.action === 'resetWifi') {
-        await resetWifi(client, replyToken, httpService, hotspotAPIConfig.hotspotURL, userId, destination, branchId);
+      await resetWifi(client, replyToken, httpService, url, userId, destination, branchId);
     }
+  } catch (err: any) {
+    console.error(`Admin branch input error:`, err.message);
+    await replyText(client, replyToken, 'เกิดข้อผิดพลาดในการประมวลผล โปรดลองใหม่ภายหลัง');
+  }
 
-    return true; // Handled
+  return true;
 }
-
-

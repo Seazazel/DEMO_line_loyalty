@@ -2,21 +2,22 @@ import { Injectable } from '@nestjs/common';
 import { Client, MessageEvent, TextMessage, WebhookEvent, LocationMessage, PostbackEvent } from '@line/bot-sdk';
 import { lineConfig } from 'config/Line.config';
 import { replyFlex, replyText, replyImage } from './functions/replyFunction';
-import { handlePostbackMessage } from './handles/handlePostbackMessage';
 import { handleMenuMessage } from './handles/handleMenuMessage';
 import { findNearbyServiceCenters, buildNearbyLocationFlex } from './functions/locationFunction';
 import { HotspotService } from 'src/hotspot/hotspot.service';
-import { handlePostbackPayload } from 'src/hotspot/handlers/handlePostbackPayload';
 import { handleAdminBranchInput } from 'src/hotspot/handlers/handleAdminAccess';
 import { handleUserBranchInput } from 'src/hotspot/handlers/handleUserAccess';
-
+import { handleAdminOption } from 'src/hotspot/handlers/handleAdminAccess';
+import { HttpService } from '@nestjs/axios';
+import { handlePostbackMessage } from './handles/handlePostbackMessage';
 
 @Injectable()
 export class MessageService {
     private client: Client;
 
     constructor(
-        private readonly hotspotService: HotspotService // ✅ Injected via Nest
+        private readonly hotspotService: HotspotService, // ✅ Injected via Nest
+        private readonly httpService: HttpService 
     ) {
         this.client = new Client(lineConfig);
     }
@@ -50,43 +51,44 @@ export class MessageService {
     }
 
     async handleMessageEvent(event: MessageEvent, destination: string): Promise<void> {
-  const userId = event.source.userId;
-  if (!userId) {
-    console.error('User ID is missing!');
-    return;
-  }
+        const userId = event.source.userId;
+        if (!userId) {
+            console.error('User ID is missing!');
+            return;
+        }
 
-  const message = (event.message as TextMessage).text.trim();
+        const replyToken = event.replyToken;
+        const message = (event.message as TextMessage).text.trim();
 
-  // Try admin branch input handler first
-  const handledAdmin = await handleAdminBranchInput( this.client, event.replyToken, userId, destination, message, this.hotspotService['httpService'],);
-  if (handledAdmin) return;
+        // Try admin branch input handler first
+        const handledAdmin = await handleAdminBranchInput(this.httpService, this.client, replyToken, userId, destination, message);
+        if (handledAdmin) return;
 
-  const handledUser = await handleUserBranchInput(
-  this.hotspotService['httpService'],
-  this.client,
-  event.replyToken,
-  userId,
-  destination,
-  message,);
+        const handledUser = await handleUserBranchInput(
+            this.hotspotService['httpService'],
+            this.client,
+            event.replyToken,
+            userId,
+            destination,
+            message,);
 
-  if (handledUser) return;
+        if (handledUser) return;
 
-  // fallback to menu message handler
-  const menuReplied = await handleMenuMessage(
-    message,
-    event.replyToken,
-    (token, flex) => replyFlex(this.client, token, flex),
-    (token, text) => replyText(this.client, token, text),
-    (token, image) => replyImage(this.client, token, image),
-  );
-  if (menuReplied) return;
+        // fallback to menu message handler
+        const menuReplied = await handleMenuMessage(
+            message,
+            event.replyToken,
+            (token, flex) => replyFlex(this.client, token, flex),
+            (token, text) => replyText(this.client, token, text),
+            (token, image) => replyImage(this.client, token, image),
+        );
+        if (menuReplied) return;
 
-  await this.client.replyMessage(event.replyToken, {
-    type: 'text',
-    text: 'กรุณาเลือกคำสั่งในริชเมนู',
-  });
-}
+        await this.client.replyMessage(event.replyToken, {
+            type: 'text',
+            text: 'กรุณาเลือกคำสั่งในริชเมนู',
+        });
+    }
 
 
     //handle postback
@@ -106,12 +108,13 @@ export class MessageService {
         const action = params['action'];
         const item = decodeURIComponent(params['item'] || '');
 
-        const stepPayload = await handlePostbackPayload(client, replyToken, userId, action, params);
-        if (stepPayload) return;
+        if (action === 'resetWifi' || action === 'usageLog') {
+            await handleAdminOption(client, replyToken, userId, action);
+            return;
+        }
 
         await handlePostbackMessage(client, replyToken, action, item, params, this.hotspotService, userId, destination);
     }
-
 
 
     //handle location event
