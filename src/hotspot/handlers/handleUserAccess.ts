@@ -47,8 +47,8 @@ export async function handleUserBranchInput(
         const { username, password, Time } = await getWiFi(client, httpService, userId, destination, branchId);
 
         if (username && password) {
-          setUserPassCache(cacheKey, { username, password, cachedAt: new Date() });
-          await replyText(client, replyToken, `Username: ${username}\nPassword: ${password}\nระยะเวลาจำกัดที่ใช้ได้: ${Time} ชั่วโมงหลังจากการขอครั้งแรก`);
+          setUserPassCache(cacheKey, { username, password, Time, cachedAt: new Date() });
+          await replyText(client, replyToken, `Username: ${username}\nPassword: ${password}\n\nระยะเวลาจำกัดที่ใช้ได้: ${Time} หลังจากการขอครั้งแรก`);
         } else {
           await replyText(client, replyToken, 'ไม่พบ Username และ Password');
         }
@@ -67,7 +67,7 @@ export async function handleUserBranchInput(
           await replyText(
             client,
             replyToken,
-            `Username (cached): ${cached.username}\nPassword (cached): ${cached.password}\nระยะเวลาจำกัดที่ใช้ได้: ชั่วโมงหลังจากการขอครั้งแรก`,
+            `*Username: ${cached.username}\n*Password: ${cached.password}\n\n*ระยะเวลาจำกัดที่ใช้ได้: ${cached.Time} หลังจากการขอครั้งแรก`,
           );
         } else {
           await replyText(client, replyToken, 'ไม่สามารถ');

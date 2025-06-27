@@ -46,6 +46,7 @@ export function clearUserSession(userId: string) {
 type CachedUserPass = {
   username: string;
   password: string;
+  Time?: string;
   cachedAt: Date;
 };
 
