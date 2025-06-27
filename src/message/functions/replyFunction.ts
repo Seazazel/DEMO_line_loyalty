@@ -13,23 +13,6 @@ export async function replyText(
     ]);
 }
 
-export async function replyImage(
-    client: Client,
-    replyToken: string,
-    image: {
-        originalContentUrl: string;
-        previewImageUrl: string;
-    }
-): Promise<void> {
-    await client.replyMessage(replyToken, [
-        {
-            type: 'image',
-            originalContentUrl: image.originalContentUrl,
-            previewImageUrl: image.previewImageUrl,
-        },
-    ]);
-}
-
 export async function replyFlex(
     client: Client,
     replyToken: string,

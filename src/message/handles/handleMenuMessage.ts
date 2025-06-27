@@ -2,18 +2,21 @@ import { getButtonOptionsFlexContent } from "../functions/flexMessage";
 import { FlexMessage } from "@line/bot-sdk";
 import { BASE_URL } from "config/baseUrl.config";
 import { getLicensePlateList } from "../functions/getLicensePlateList";
+import { Client } from "@line/bot-sdk";
+import { lineConfig } from "config/Line.config";
+
+const client = new Client(lineConfig);
 
 
 const servicesOptions = ['ศูนย์บริการใกล้ฉัน', 'ตรอ. ใกล้ฉัน', 'โปรโมชั่นศูนย์บริการ'];
 const regandinsureOptions = ['เช็คข้อมูลทะเบียน', 'ต่อทะเบียน', 'ต่อพรบ.', 'ซื้อ/ต่อประกัน'];
-const moreOptions = ['ช่องทางการติดต่อ', 'สมัครงาน','ขอรหัส wi-fi','บริจาคเงินช่วยเหลือเด็กๆ', 'อื่นๆ'];
+const moreOptions = ['ช่องทางการติดต่อ', 'สมัครงาน', 'ขอรหัส wi-fi', 'บริจาคเงินช่วยเหลือเด็กๆ', 'อื่นๆ'];
 
 export async function handleMenuMessage(
     message: string,
     replyToken: string,
     replyFlex: (token: string, flex: FlexMessage) => Promise<void>,
     replyText: (token: string, text: string) => Promise<void>,
-    replyImage: (token: string, image: { originalContentUrl: string; previewImageUrl: string }) => Promise<void>
 ): Promise<boolean> {
     switch (message) {
         case 'เช็คค่างวด/ปิดบัญชี': {
@@ -30,7 +33,7 @@ export async function handleMenuMessage(
         }
 
         case 'ข้อมูลผลิตภัณฑ์': {
-            await replyText(replyToken, 'https://three-section-layout-38aj.vercel.app/');
+            await replyText(replyToken, 'https://three-section-layout101-gsi4.vercel.app/?fbclid=IwY2xjawLK9E5leHRuA2FlbQIxMABicmlkETFvU1VIeFd0Y05ta3hKNER6AR51TZ31GZGTO4Ilz2SxGRhqi_NSgbXQPouvOocsDk7kOPv39mcHVG9-elaXLA_aem_2AEDZp97RbJ5w4Pq8wGHDQ');
             return true;
         }
 
@@ -59,12 +62,13 @@ export async function handleMenuMessage(
         }
 
         case 'สิทธิพิเศษ/สมาชิก': {
-            await replyImage(replyToken, {
-                originalContentUrl: `${BASE_URL}/assets/images/membership.png`,
-                previewImageUrl: `${BASE_URL}/assets/images/membership.png`,
-            });
-            //console.log('Image URL:', `${BASE_URL}/assets/images/membership.png`);
-
+            await client.replyMessage(replyToken, [
+                {
+                    type: 'image',
+                    originalContentUrl: `${BASE_URL}/assets/images/membership.png`,
+                    previewImageUrl: `${BASE_URL}/assets/images/membership.png`,
+                },
+            ]);
             return true;
         }
 

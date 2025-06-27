@@ -1,5 +1,5 @@
 import { Client } from '@line/bot-sdk';
-import { replyText, replyImage, replyFlex } from '../functions/replyFunction';
+import { replyText, replyFlex } from '../functions/replyFunction';
 import { getLicensePlateList } from '../functions/getLicensePlateList';
 import { getButtonOptionsFlexContent } from '../functions/flexMessage';
 import { BASE_URL } from 'config/baseUrl.config';
@@ -13,8 +13,8 @@ export async function handleCheckLicenseNum(
 ): Promise<void> {
   const plate = decodeURIComponent(params['plate'] || 'ไม่ทราบทะเบียน');
   const responseText = `ข้อมูลของทะเบียน ${plate}\n\nพรบ.ของท่านจะหมดอายุในวันที่ 24 มกราคม พ.ศ.2566 `;
-  
-    await client.replyMessage(replyToken, [
+
+  await client.replyMessage(replyToken, [
     {
       type: 'text',
       text: responseText,
@@ -30,7 +30,7 @@ export async function handleCheckLicenseNum(
       previewImageUrl: `${BASE_URL}/assets/images/PRB.jpg`,
     },
   ]);
-  
+
   await replyText(client, replyToken, responseText);
 }
 
@@ -69,35 +69,41 @@ export async function handleRenewOrBuyInsurance(
 ): Promise<void> {
   switch (item) {
     case 'ซื้อประกัน': {
-      await replyText(client, replyToken, 'สมมติว่านี่เป็นภาพโปรโมชั่น');
+      await client.replyMessage(replyToken, [
+        {
+          type: 'image',
+          originalContentUrl: `${BASE_URL}/assets/images/promotion2.jpg`,
+          previewImageUrl: `${BASE_URL}/assets/images/promotion2.jpg`,
+        },
+      ]);
       return;
     }
 
     case 'ต่อประกัน': {
-  const plate = decodeURIComponent(params['plate'] || '');
+      const plate = decodeURIComponent(params['plate'] || '');
 
-  // ✅ Step 1: No plate yet → show options to choose
-  if (!plate) {
-    const plates = await getLicensePlateList(); // e.g. ['1กก1234', '2ขข5678']
+      // ✅ Step 1: No plate yet → show options to choose
+      if (!plate) {
+        const plates = await getLicensePlateList(); // e.g. ['1กก1234', '2ขข5678']
 
-    const flex = getButtonOptionsFlexContent(
-      'กรุณาเลือก\nเลขทะเบียนรถที่ท่านต้องการตรวจสอบ',
-      plates.map((plate) => ({
-        label: plate,
-        postbackData: `action=renewInsurance&plate=${encodeURIComponent(plate)}`,
-      }))
-    );
+        const flex = getButtonOptionsFlexContent(
+          'กรุณาเลือก\nเลขทะเบียนรถที่ท่านต้องการตรวจสอบ',
+          plates.map((plate) => ({
+            label: plate,
+            postbackData: `action=renewInsurance&plate=${encodeURIComponent(plate)}`,
+          }))
+        );
 
-    await replyFlex(client, replyToken, flex);
-    return;
-  }
+        await replyFlex(client, replyToken, flex);
+        return;
+      }
 
-  // ✅ Step 2: Plate is provided → confirm submission
-  await client.replyMessage(replyToken, {
-    type: 'text',
-    text: `ส่งคำขอต่อประกันของทะเบียน ${plate} เรียบร้อยแล้ว\n\nเจ้าหน้าที่จะติดต่อท่านให้เร็วที่สุด ✅`,
-  });
-  return;
+      // ✅ Step 2: Plate is provided → confirm submission
+      await client.replyMessage(replyToken, {
+        type: 'text',
+        text: `ส่งคำขอต่อประกันของทะเบียน ${plate} เรียบร้อยแล้ว\n\nเจ้าหน้าที่จะติดต่อท่านให้เร็วที่สุด ✅`,
+      });
+      return;
     }
 
 

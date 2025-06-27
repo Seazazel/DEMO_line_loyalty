@@ -1,5 +1,7 @@
 import { Client, TextMessage } from '@line/bot-sdk';
 import { getLocationRequestFlex } from '../functions/flexMessage';
+import { BASE_URL } from 'config/baseUrl.config';
+
 
 export async function handleServiceCenter(
   client: Client,
@@ -18,12 +20,16 @@ export async function handleServiceCenter(
       return;
     }
 
-    case 'โปรโมชั่นศูนย์บริการ':
-      await client.replyMessage(replyToken, {
-        type: 'text',
-        text: `คุณเลือกบริการ: ${item}`,
-      });
-      return;
+    case 'โปรโมชั่นศูนย์บริการ': {
+      await client.replyMessage(replyToken, [
+        {
+          type: 'image',
+          originalContentUrl: `${BASE_URL}/assets/images/promotion1.jpg`,
+          previewImageUrl: `${BASE_URL}/assets/images/promotion1.jpg`,
+        },
+      ]);
+      return true;
+    }
 
     default:
       await client.replyMessage(replyToken, {

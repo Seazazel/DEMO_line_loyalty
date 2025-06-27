@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Client, MessageEvent, TextMessage, WebhookEvent, LocationMessage, PostbackEvent } from '@line/bot-sdk';
 import { lineConfig } from 'config/Line.config';
-import { replyFlex, replyText, replyImage } from './functions/replyFunction';
+import { replyFlex, replyText,} from './functions/replyFunction';
 import { handleMenuMessage } from './handles/handleMenuMessage';
 import { findNearbyServiceCenters, buildNearbyLocationFlex } from './functions/locationFunction';
 import { HotspotService } from 'src/hotspot/hotspot.service';
@@ -80,7 +80,6 @@ export class MessageService {
             event.replyToken,
             (token, flex) => replyFlex(this.client, token, flex),
             (token, text) => replyText(this.client, token, text),
-            (token, image) => replyImage(this.client, token, image),
         );
         if (menuReplied) return;
 
