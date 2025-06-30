@@ -6,6 +6,13 @@ type ButtonOption = {
   postbackData: string;
 };
 
+interface ProductCard {
+  title: string;
+  imageUrl: string;
+  location: string;
+  url: string; // New field for the link
+}
+
 export function getButtonOptionsFlexContent(
   title: string,
   options: ButtonOption[]
@@ -92,30 +99,65 @@ export function getLocationRequestFlex(): FlexMessage {
   };
 }
 
-// export function getUserInfoFlex(user: { name: string; email: string }): Promise<FlexMessage> {
-//     return {
-//       type: 'flex',
-//       altText: 'ข้อมูลผู้ใช้',
-//       contents: {
-//         type: 'bubble',
-//         body: {
-//           type: 'box',
-//           layout: 'vertical',
-//           contents: [
-//             {
-//               type: 'text',
-//               text: `ชื่อ: ${user.name}`,
-//               weight: 'bold',
-//               size: 'md',
-//             },
-//             {
-//               type: 'text',
-//               text: `อีเมล: ${user.email}`,
-//               size: 'sm',
-//               color: '#666666',
-//             },
-//           ],
-//         },
-//       },
-//     };
-//   }
+
+export function getRestaurantCarouselFlexContent(
+  altText: string,
+  cards: ProductCard[]
+): FlexMessage {
+  const bubbles: FlexBubble[] = cards.map(({ title, imageUrl, location, url }) => ({
+    type: 'bubble',
+    hero: {
+      type: 'image',
+      url: imageUrl,
+      size: 'full',
+      aspectRatio: '1:1',
+      aspectMode: 'cover',
+    },
+    body: {
+      type: 'box',
+      layout: 'vertical',
+      spacing: 'sm',
+      contents: [
+        {
+          type: 'text',
+          text: title,
+          weight: 'bold',
+          size: 'md',
+          wrap: true,
+        },
+        // Removed rating box here
+        {
+          type: 'text',
+          text: location,
+          size: 'sm',
+          color: '#aaaaaa',
+        },
+      ],
+    },
+    footer: {
+      type: 'box',
+      layout: 'vertical',
+      spacing: 'sm',
+      contents: [
+        {
+          type: 'button',
+          action: {
+            type: 'uri',
+            label: 'เข้าสู่เว็บไซต์',
+            uri: url,
+          },
+          style: 'link',
+        },
+      ],
+    },
+  }));
+
+  return {
+    type: 'flex',
+    altText,
+    contents: {
+      type: 'carousel',
+      contents: bubbles,
+    },
+  };
+}
