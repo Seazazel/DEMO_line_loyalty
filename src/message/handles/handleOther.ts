@@ -15,7 +15,7 @@ export async function handleOther(
 ): Promise<void> {
   switch (item) {
     case 'ช่องทางการติดต่อ': {
-      await replyText(client, replyToken, 'ช่องทางการติดต่อ: https://www.greenwing.co.th/greenwingrn');
+      await replyText(client, replyToken, 'เบอร์ติดต่อ: 097-395-5151\n\nช่องทางการติดต่อเพิ่มเติม: https://www.greenwing.co.th/contactus');
       return;
     }
 
@@ -48,7 +48,7 @@ case 'บริจาคเงินช่วยเหลือเด็กๆ':
     case 'อื่นๆ': {
       await client.replyMessage(replyToken, {
         type: 'text',
-        text: `ท่านสามารถขอรับบริการเพิ่มเติมจากเจ้าหน้าที่ผ่านเบอร์ติดต่อ 097-395-5151`, 
+        text: `ท่านสามารถขอรับบริการเพิ่มเติมจากเจ้าหน้าที่ผ่านเบอร์ติดต่อ: 097-395-5151`, 
       });
       return;
     }

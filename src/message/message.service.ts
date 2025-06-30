@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Client, MessageEvent, TextMessage, WebhookEvent, LocationMessage, PostbackEvent } from '@line/bot-sdk';
 import { lineConfig } from 'config/Line.config';
-import { replyFlex, replyText,} from './functions/replyFunction';
+import { replyFlex, replyText, } from './functions/replyFunction';
 import { handleMenuMessage } from './handles/handleMenuMessage';
 import { findNearbyServiceCenters, buildNearbyLocationFlex } from './functions/locationFunction';
 import { HotspotService } from 'src/hotspot/hotspot.service';
@@ -10,6 +10,9 @@ import { handleUserBranchInput } from 'src/hotspot/handlers/handleUserAccess';
 import { handleAdminOption } from 'src/hotspot/handlers/handleAdminAccess';
 import { HttpService } from '@nestjs/axios';
 import { handlePostbackMessage } from './handles/handlePostbackMessage';
+import { handleUserAccess } from 'src/hotspot/handlers/handleUserAccess';
+
+
 
 @Injectable()
 export class MessageService {
@@ -17,7 +20,7 @@ export class MessageService {
 
     constructor(
         private readonly hotspotService: HotspotService, // ✅ Injected via Nest
-        private readonly httpService: HttpService 
+        private readonly httpService: HttpService
     ) {
         this.client = new Client(lineConfig);
     }
@@ -108,7 +111,13 @@ export class MessageService {
         const item = decodeURIComponent(params['item'] || '');
 
         if (action === 'resetWifi' || action === 'usageLog') {
-            await handleAdminOption(client, replyToken, userId, action);
+            await handleAdminOption(client, replyToken, userId, destination, action as 'resetWifi' | 'usageLog');
+            return;
+        }
+
+        if (action === 'getWifi') {
+            // This triggers the normal user Wi-Fi access flow for admin
+            await handleUserAccess(client, replyToken, userId, destination);
             return;
         }
 

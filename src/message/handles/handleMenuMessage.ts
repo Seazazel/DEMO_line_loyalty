@@ -39,7 +39,7 @@ export async function handleMenuMessage(
                     title: 'Greenwing',
                     imageUrl: `${BASE_URL}/assets/images/greenwing1.jpg`,
                     location: 'หมวดหมู่: greenwing',
-                    url: 'https://www.greenwing.co.th/',
+                    url: 'https://www.thaihonda.co.th/',
                 },
                 {
                     title: 'Bigwing',

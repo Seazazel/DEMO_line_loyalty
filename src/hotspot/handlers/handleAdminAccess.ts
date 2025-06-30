@@ -5,6 +5,7 @@ import { getAdminSession, clearAdminSession, setAdminSession } from 'src/hotspot
 import { resetWifi, getUsageLog } from 'src/hotspot/functions/hotspot.api';
 import { replyText } from 'src/message/functions/replyFunction';
 import { getButtonOptionsFlexContent } from 'src/message/functions/flexMessage';
+import { handleUserAccess } from './handleUserAccess';
 
 // ENTRY FUNCTION
 export async function handleAdminAccess(
@@ -22,17 +23,23 @@ export async function handleAdminAccess(
         label: 'รีเซ็ตรหัส Wi-Fi',
         postbackData: 'action=resetWifi',
       },
+      {
+        label: 'ขอรหัส Wi-Fi',
+        postbackData: 'action=getWifi',
+      },
     ]
   );
 
   await client.replyMessage(replyToken, flex);
 }
 
+
 // handle postback option
 export async function handleAdminOption(
   client: Client,
   replyToken: string,
   userId: string,
+  destination: string,
   action: 'usageLog' | 'resetWifi'
 ): Promise<void> {
   setAdminSession(userId, {
@@ -40,13 +47,23 @@ export async function handleAdminOption(
     step: 'awaitingBranchId',
   });
 
-  const prompt =
-    action === 'usageLog'
-      ? '📊 โปรดกรอกรหัสสาขาที่ต้องการดูประวัติ\n\n- พิมพ์รหัสสาขา หรือ\n- พิมพ์ all เพื่อดูทุกสาขา'
-      : '🔐 โปรดกรอกรหัสสาขาที่ต้องการรีเซ็ต Wi-Fi\n\n- พิมพ์รหัสสาขา หรือ\n- พิมพ์ all เพื่อรีเซ็ตทุกสาขา';
+  let prompt = '';
+
+  switch (action) {
+    case 'usageLog':
+      prompt =
+        '📊 โปรดกรอกรหัสสาขาที่ต้องการดูประวัติ\n\n- พิมพ์รหัสสาขา หรือ\n- พิมพ์ all เพื่อดูทุกสาขา';
+      break;
+    case 'resetWifi':
+      prompt =
+        '🔐 โปรดกรอกรหัสสาขาที่ต้องการรีเซ็ต Wi-Fi\n\n- พิมพ์รหัสสาขา หรือ\n- พิมพ์ all เพื่อรีเซ็ตทุกสาขา';
+      break;
+  }
 
   await replyText(client, replyToken, prompt);
 }
+
+
 
 export async function handleAdminBranchInput(
   httpService: HttpService,
